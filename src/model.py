@@ -65,28 +65,63 @@ class FrozenCLIPBackbone(nn.Module):
         return self.model.encode_text(tokens)
 
     def patch_grid(self, images: torch.Tensor) -> tuple[torch.Tensor, int]:
-        """返回 (B, D, S, S) 的 patch 特征网格。"""
+        """返回 (B, D, S, S) 的 patch 特征网格。
+
+        open_clip 不同版本的视觉塔实现不同，按可用性依次回退：
+        1) TimmModel：visual.trunk.forward_features；
+        2) 自定义 VisionTransformer：visual.forward_intermediates（>= 2.32）；
+        3) 旧版 CLIPVisionTransformer：手动 patch 化 + transformer。
+        """
         visual = self.model.visual
+
         trunk = getattr(visual, "trunk", None)
-        if trunk is None or not hasattr(trunk, "forward_features"):
-            raise RuntimeError(
-                "当前 open_clip 版本不暴露 trunk.forward_features；请升级 open_clip_torch>=2.24"
+        if trunk is not None and hasattr(trunk, "forward_features"):
+            features = trunk.forward_features(images)
+            if isinstance(features, dict):
+                features = features.get("x")
+            if features is None:
+                raise RuntimeError("无法从 CLIP trunk 取 patch 特征")
+            num_prefix = int(getattr(trunk, "num_prefix_tokens", 1))
+            return self._tokens_to_grid(features[:, num_prefix:, :])
+
+        if hasattr(visual, "forward_intermediates"):
+            output = visual.forward_intermediates(
+                images,
+                indices=1,
+                normalize_intermediates=True,
+                intermediates_only=True,
+                output_fmt="NCHW",
             )
+            grid = output["image_intermediates"][-1]
+            side = int(math.isqrt(grid.shape[-2] * grid.shape[-1]))
+            return grid, side
 
-        features = trunk.forward_features(images)
-        if isinstance(features, dict):
-            features = features.get("x")
-        if features is None:
-            raise RuntimeError("无法从 CLIP trunk 取 patch 特征")
+        if (
+            hasattr(visual, "conv1")
+            and hasattr(visual, "transformer")
+            and hasattr(visual, "class_embedding")
+        ):
+            x = visual.conv1(images)
+            x = x.reshape(x.shape[0], x.shape[1], -1).permute(0, 2, 1)
+            cls = visual.class_embedding.to(x.dtype) + torch.zeros(
+                x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device
+            )
+            x = torch.cat([cls, x], dim=1) + visual.positional_embedding.to(x.dtype)
+            x = visual.ln_pre(x).permute(1, 0, 2)
+            x = visual.transformer(x)
+            if isinstance(x, (tuple, list)):
+                x = x[0]
+            return self._tokens_to_grid(x.permute(1, 0, 2)[:, 1:, :])
 
-        num_prefix = int(getattr(trunk, "num_prefix_tokens", 1))
-        tokens = features[:, num_prefix:, :]
+        raise RuntimeError("无法从当前 open_clip 视觉塔取 patch 特征")
+
+    @staticmethod
+    def _tokens_to_grid(tokens: torch.Tensor) -> tuple[torch.Tensor, int]:
         batch, num_tokens, dim = tokens.shape
         side = int(math.isqrt(num_tokens))
         if side * side != num_tokens:
             raise RuntimeError(f"patch 数量 {num_tokens} 不是完全平方数，无法还原网格")
-        grid = tokens.transpose(1, 2).reshape(batch, dim, side, side)
-        return grid, side
+        return tokens.transpose(1, 2).reshape(batch, dim, side, side), side
 
 
 class AffordanceDecoder(nn.Module):

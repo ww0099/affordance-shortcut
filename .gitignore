@@ -9,6 +9,7 @@ results/*
 !results/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/smoke5/
 
 # 数据（原始与中间产物都不入库）
 data/raw/
