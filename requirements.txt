@@ -1,0 +1,11 @@
+# 本机 CPU 冒烟已验证：torch 2.13.0+cpu / pyarrow 26.0.1
+# Kaggle 镜像自带 torch，只需补 open_clip_torch
+torch>=2.1
+torchvision>=0.16
+open_clip_torch>=2.26
+timm>=0.9
+pillow>=10.0
+numpy>=1.24
+pyarrow>=15.0
+pyyaml>=6.0
+tqdm>=4.66

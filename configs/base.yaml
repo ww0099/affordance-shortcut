@@ -1,0 +1,39 @@
+# 主配置（E2 主模型）
+# 数据根目录：null => 读 AGD_DATA_ROOT 环境变量；再缺省则用 ../downloads/affordance-datasets
+
+seed: 42
+
+data:
+  root: null
+  subset: iffyuan_agd          # iffyuan_agd | agd20k
+  meta_csv: data/processed/meta.csv
+  image_size: 224
+  num_workers: 2
+  splits:
+    seen: seen
+    easy_unseen: easy_unseen
+    hard_unseen: hard_unseen
+
+model:
+  backbone: ViT-B-16
+  pretrained: laion2b_s34b_b88k
+  freeze_backbone: true
+  text_dim: 512
+  decoder_channels: 128
+  decoder_dropout: 0.1
+
+train:
+  batch_size: 32
+  epochs: 20
+  lr: 1.0e-3
+  weight_decay: 0.01
+  amp: true
+  grad_clip: 1.0
+
+eval:
+  metrics: [iou, nss, kld, sim]
+  iou_threshold: 0.5
+
+output:
+  dir: results/runs
+  save_metrics: results/metrics.csv

@@ -1,0 +1,19 @@
+# 去偏实验配置（E3 后处理 / E4 反事实增强）
+# 覆盖 base.yaml 中的同名键
+
+seed: 42
+
+debias:
+  e3_prior_subtraction:
+    enabled: true
+    prior_npz: results/priors/category_prior.npz
+    alpha: 1.0                 # logits - alpha * prior_logits
+  e4_counterfactual_text:
+    enabled: true
+    swap_prob: 0.5             # 每次训练随机替换物体名词的概率
+  e5_adversarial_head:
+    enabled: false             # 可选，暂不实现
+
+output:
+  dir: results/runs
+  save_metrics: results/metrics_debias.csv
