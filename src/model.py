@@ -115,6 +115,26 @@ class FrozenCLIPBackbone(nn.Module):
 
         raise RuntimeError("无法从当前 open_clip 视觉塔取 patch 特征")
 
+    def project_to_text_space(self, grid: torch.Tensor) -> torch.Tensor:
+        """把 patch 网格投影到文本嵌入维度（ViT-B-16: 768 -> 512）。
+
+        open_clip 只对 pooled 特征应用 `visual.proj`；patch tokens 需要手动乘同一个矩阵，
+        否则与 text embedding 做余弦相似度时维度不匹配。
+        """
+        visual = self.model.visual
+        projection = getattr(visual, "proj", None)
+        if projection is None:
+            return grid
+
+        batch, dim, height, width = grid.shape
+        flat = grid.reshape(batch, dim, height * width).permute(0, 2, 1)
+        if isinstance(projection, nn.Module):
+            flat = projection(flat)
+        else:
+            flat = flat @ projection.to(flat.dtype)
+        out_dim = flat.shape[-1]
+        return flat.permute(0, 2, 1).reshape(batch, out_dim, height, width)
+
     @staticmethod
     def _tokens_to_grid(tokens: torch.Tensor) -> tuple[torch.Tensor, int]:
         batch, num_tokens, dim = tokens.shape

@@ -77,6 +77,7 @@ def e0_predict(priors: dict[str, np.ndarray], object_name: str, affordance: str,
 def e1_clip_zeroshot(backbone, images: torch.Tensor, objects: list[str], affordances: list[str], output_size: int = 224) -> torch.Tensor:
     """E1：patch 特征与文本嵌入的余弦相似度，上采样成热图。"""
     grid, _ = backbone.patch_grid(images)  # B, D, S, S
+    grid = backbone.project_to_text_space(grid)  # 768 -> 512，和文本同空间
     prompts = [build_prompt(obj, aff) for obj, aff in zip(objects, affordances)]
     text = backbone.encode_text(prompts)  # B, D
 
