@@ -132,3 +132,10 @@ python scripts/smoke_check.py
 - `D:\Myproject(AI)\llm-finetune\`：保留为**支线 A**（机器人领域 LLM），暂不投入。
 - `D:\Myproject(AI)\experience-affordance\`：第三层 state-history 原型，不混入本线。
 - `D:\Myproject(AI)\机械臂项目\`：SO-ARM101 + ROS2 工程线，后期部署目标。
+
+## 10. 维护约定
+
+- 远程仓库：https://github.com/ww0099/affordance-shortcut （public，main 分支）。
+- 每完成一批改动（代码 / 文档 / 实验结论）：`git add -A` → 中文 commit → `git push origin main`。
+- 数据与训练产物不入库（见 `.gitignore`）；`meta.csv` 由 `prepare_meta.py` 重新生成。
+- 正式实验必须记录 split、随机种子与配置 hash：写进 commit message，或归档到 `results/`。
