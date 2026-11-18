@@ -1,0 +1,26 @@
+{
+  "device": "cpu",
+  "samples": 5,
+  "objects": [
+    "knife",
+    "wine_glass",
+    "cup",
+    "bicycle",
+    "bottle"
+  ],
+  "affordances": [
+    "cut_with",
+    "drink_with",
+    "hold",
+    "ride",
+    "pour"
+  ],
+  "metrics": {
+    "iou": 0.128829,
+    "nss": -0.434775,
+    "kld": 2.369678,
+    "sim": 0.12454,
+    "count": 5
+  },
+  "elapsed_seconds": 4.5
+}

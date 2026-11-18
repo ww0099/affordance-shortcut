@@ -7,6 +7,9 @@ __pycache__/
 # 训练与自检产物
 results/*
 !results/.gitkeep
+!results/smoke_e1_metrics.csv
+!results/smoke_e1_summary.json
+!results/smoke_e1_heatmaps.png
 data/processed/*
 !data/processed/.gitkeep
 data/smoke5/

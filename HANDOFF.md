@@ -2,7 +2,28 @@
 
 > **主线**：可供性类别捷径（affordance-shortcut，路线 C）
 > **当前阶段**：Phase 0（数据冒烟），四级（2026-12）前不动 GPU 大训练
-> **状态一句话**：数据管道与冒烟包已完成并推送；Kaggle 冒烟尚未出结果——第一次因维度投影失败（已修），第二次提交了旧版本代码（需重新提交）。
+> **状态一句话**：Phase 0 已闭环——本机 CPU 冒烟跑通，代码链路验证通过；Kaggle 提交版本问题不再阻塞主线。
+
+---
+
+## 0. 2026-11-18 更新：Phase 0 冒烟已在本机跑通
+
+| 项 | 结果 |
+|---|---|
+| 环境 | `D:\PythonEnv\affordance`（Python 3.11 / torch 2.15 CPU / open_clip 4.2.2 / timm 1.0.31） |
+| 权重 | `open_clip_model.safetensors` 570.8MB，SHA256 与 HF LFS **完全一致**（`3f25d29d…f227f1`） |
+| 前向 | 5 样本 / 4.5s / CPU |
+| mean IoU | **0.129** |
+| mean NSS | **−0.435** |
+| mean KLD / SIM | 2.370 / 0.125 |
+| 产物 | `results/smoke_e1_metrics.csv`、`smoke_e1_summary.json`、`smoke_e1_heatmaps.png` |
+
+**结论**：热图落在物体上（自行车/酒瓶/杯子最明显），只是覆盖整个物体而非交互点；
+E1 是弱基线，低 IoU 属预期。**代码链路（patch API → visual.proj → 文本相似度 → 指标）已验证。**
+
+**Kaggle**：不再阻塞主线。需要公开复现记录时，用修复版重新 `Save & Run All` 即可，结果应与本机一致（仅速度不同）。
+
+**下一步**：进入等待期，四级优先；**2026-12-20 之后**再启动 AGD20K 下载与 Phase 1。
 
 ---
 

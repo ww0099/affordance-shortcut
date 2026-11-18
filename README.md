@@ -94,8 +94,27 @@ python scripts/prepare_meta.py --subset iffyuan_agd
 python scripts/smoke_check.py
 ```
 
-> 本机 venv **没有 open_clip / timm**，模型代码只做了语法检查；首次真实前向与训练
-> 在 Kaggle 上执行：`pip install open_clip_torch timm` → `python -m src.train --config configs/base.yaml`。
+> 本机专用环境：`D:\PythonEnv\affordance`（torch 2.15 CPU + open_clip 4.2.2）；
+> CLIP 权重缓存在 `downloads\hf-cache\`。Kaggle Notebook 仍保留，用于复现与后续 GPU 训练。
+
+### Phase 0 冒烟结果（2026-11-18，本机 CPU）
+
+```bash
+python scripts/local_smoke_e1.py --pretrained <open_clip_model.safetensors 路径>
+```
+
+| 指标 | 值 |
+|---|---|
+| 样本 | 5（knife / wine_glass / cup / bicycle / bottle） |
+| 前向耗时 | 4.5s（CPU） |
+| mean IoU | 0.129 |
+| mean NSS | −0.435 |
+| mean KLD | 2.370 |
+| mean SIM | 0.125 |
+
+**解读**：E1 零样本相似度会覆盖整个物体，而不是精确的交互点，因此 IoU 偏低、NSS 有正有负，
+属于预期。这一步验证的是 **patch API → visual.proj → 文本相似度 → 指标** 的完整链路。
+产物：`results/smoke_e1_metrics.csv`、`results/smoke_e1_summary.json`、`results/smoke_e1_heatmaps.png`。
 
 ## 6. 算力预算（已确认）
 
